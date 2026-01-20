@@ -20,15 +20,20 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v5  # Use v5 ou latest; cache incluso
+    - name: Setup Gradle 8.5
+      uses: gradle/actions/setup-gradle@v5
+      with:
+        gradle-version: 8.5  # Fixa em 8.5 para compatibilidade com AGP 8.2.x
 
     - name: Build with Gradle
-      run: gradle build  # Sem ./gradlew — o setup-gradle configura o ambiente para rodar 'gradle' direto
+      run: gradle build --warning-mode all  # Mostra warnings para debug
 
-    - name: Upload build artifacts (opcional)
+    - name: Upload build artifacts (if any)
       if: always()
       uses: actions/upload-artifact@v4
       with:
         name: build-artifacts
-        path: app/build/outputs
+        path: |
+          app/build/outputs/**/*.apk
+          app/build/outputs/**/*.aab
+        if-no-files-found: warn
