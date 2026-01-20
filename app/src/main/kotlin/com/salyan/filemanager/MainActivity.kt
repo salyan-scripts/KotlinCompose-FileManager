@@ -44,44 +44,20 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun FileManagerScreen() {
     val context = LocalContext.current
-    val filesState = remember { mutableStateOf(listOf<File>()) }
-    val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    val filesState = remember { mutableStateOf(listOf<File>()) }  // Completed listOf<File>()
 
     LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(
-                context.findActivity(),
-                arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                1
-            )
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            val root = Environment.getExternalStorageDirectory()
+            filesState.value = root.listFiles()?.toList() ?: emptyList()
         } else {
-            loadFiles(filesState)
+            ActivityCompat.requestPermissions(context as MainActivity, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 1)
         }
     }
 
     LazyColumn {
         items(filesState.value) { file ->
-            Text(
-                text = "${file.name} - ${if (file.isDirectory) "Pasta" else "Arquivo"} - ${dateFormat.format(Date(file.lastModified()))}"
-            )
+            Text(text = file.name)
         }
     }
-}
-
-private fun loadFiles(filesState: androidx.compose.runtime.MutableState<List<File>>) {
-    val root = Environment.getExternalStorageDirectory()
-    root.listFiles()?.let { files ->
-        filesState.value = files.toList().sortedBy { it.name }
-    }
-}
-
-// Extensão para encontrar Activity
-import android.app.Activity
-fun androidx.compose.ui.platform.LocalContext.findActivity(): Activity? {
-    var current = current
-    while (current is android.content.ContextWrapper) {
-        if (current is Activity) return current
-        current = current.baseContext
-    }
-    return null
 }
