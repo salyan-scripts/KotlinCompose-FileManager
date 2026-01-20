@@ -13,8 +13,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.InsertDriveFile
+import androidx.compose.material.icons.filled.Folder          // <-- Adicionado aqui
+import androidx.compose.material.icons.filled.InsertDriveFile  // <-- Adicionado aqui
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -76,7 +76,7 @@ fun FileManagerApp() {
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* Menu: ordenar, nova pasta, etc */ }) {
+                    IconButton(onClick = { /* TODO: Menu completo */ }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Mais")
                     }
                 }
@@ -94,7 +94,7 @@ fun FileManagerApp() {
                         if (file.isDirectory) {
                             currentPath = file
                         } else {
-                            // TODO: abrir arquivo (compartilhar, visualizar, etc)
+                            // TODO: abrir arquivo
                         }
                     }
                 }
@@ -109,7 +109,7 @@ fun FileItem(file: File, onClick: () -> Unit) {
         headlineContent = { Text(file.name) },
         leadingContent = {
             if (file.isDirectory) {
-                Icon(Icons.Default.Folder, contentDescription = null, tint = Color(0xFFFFA500))
+                Icon(Icons.Default.Folder, contentDescription = null, tint = Color(0xFFFFA500)) // Laranja para pastas
             } else {
                 Icon(Icons.Default.InsertDriveFile, contentDescription = null, tint = Color.Gray)
             }
