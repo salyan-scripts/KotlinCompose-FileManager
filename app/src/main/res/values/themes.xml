@@ -1,8 +1,8 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Use um tema base Material compatível sem Material3 específico -->
+    <!-- Base application theme usando Material Components clássico -->
     <style name="Base.Theme.KotlinComposeFileManager" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Ou use Theme.Material3 se adicionar a dep, senão fallback -->
-        <!-- Alternativa nativa: parent="Theme.AppCompat.DayNight.NoActionBar" -->
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
     <style name="Theme.KotlinComposeFileManager" parent="Base.Theme.KotlinComposeFileManager" />
