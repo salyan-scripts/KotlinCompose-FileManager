@@ -1,119 +1,48 @@
-package com.salyan.filemanager
+# ... (mantenha o código anterior e substitua a parte do Scaffold e FileItem por isso)
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.os.Bundle
-import android.os.Environment
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Folder          // <-- Adicionado aqui
-import androidx.compose.material.icons.filled.InsertDriveFile  // <-- Adicionado aqui
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import java.io.File
-import java.text.SimpleDateFormat
-import java.util.*
+# No topo, adicione esses imports extras se necessário
+import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 
-class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            MaterialTheme {
-                FileManagerApp()
-            }
+# Dentro de FileManagerApp():
+var showHidden by remember { mutableStateOf(false) }
+var sortBy by remember { mutableStateOf("name") } // "name", "date", "size"
+
+# Filtrar e ordenar arquivos
+val displayedFiles = files
+    .filter { showHidden || !it.name.startsWith(".") }
+    .sortedBy {
+        when (sortBy) {
+            "date" -> it.lastModified()
+            "size" -> if (it.isFile) it.length() else 0L
+            else -> it.name.lowercase()
         }
+    }
+
+// No Scaffold, actions:
+actions = {
+    IconButton(onClick = { sortBy = if (sortBy == "name") "date" else if (sortBy == "date") "size" else "name" }) {
+        Icon(Icons.Default.Sort, contentDescription = "Ordenar")
+    }
+    IconButton(onClick = { showHidden = !showHidden }) {
+        Icon(if (showHidden) Icons.Default.Visibility else Icons.Default.VisibilityOff, contentDescription = "Ocultos")
+    }
+    IconButton(onClick = { /* TODO: Popup completo com Nova pasta, etc */ }) {
+        Icon(Icons.Default.MoreVert, contentDescription = "Mais")
     }
 }
 
-@Composable
-fun FileManagerApp() {
-    val context = LocalContext.current
-    var currentPath by remember { mutableStateOf(Environment.getExternalStorageDirectory()) }
-    var files by remember { mutableStateOf(listOf<File>()) }
-    var permissionGranted by remember { mutableStateOf(false) }
-
-    // Solicitar permissão
-    LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            permissionGranted = true
-            files = currentPath.listFiles()?.toList() ?: emptyList()
-        } else {
-            ActivityCompat.requestPermissions(context as MainActivity, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 1)
-        }
-    }
-
-    // Atualizar arquivos quando path mudar
-    LaunchedEffect(currentPath) {
-        if (permissionGranted) {
-            files = currentPath.listFiles()?.toList() ?: emptyList()
-        }
-    }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(currentPath.absolutePath.removePrefix(Environment.getExternalStorageDirectory().absolutePath).ifEmpty { "Memória interna" }) },
-                navigationIcon = {
-                    if (currentPath != Environment.getExternalStorageDirectory()) {
-                        IconButton(onClick = { currentPath = currentPath.parentFile ?: currentPath }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
-                        }
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { /* TODO: Menu completo */ }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Mais")
-                    }
-                }
-            )
-        }
-    ) { padding ->
-        if (!permissionGranted) {
-            Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("Aguardando permissão de armazenamento...")
-            }
-        } else {
-            LazyColumn(Modifier.padding(padding)) {
-                items(files) { file ->
-                    FileItem(file) {
-                        if (file.isDirectory) {
-                            currentPath = file
-                        } else {
-                            // TODO: abrir arquivo
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun FileItem(file: File, onClick: () -> Unit) {
-    ListItem(
-        headlineContent = { Text(file.name) },
-        leadingContent = {
-            if (file.isDirectory) {
-                Icon(Icons.Default.Folder, contentDescription = null, tint = Color(0xFFFFA500)) // Laranja para pastas
-            } else {
-                Icon(Icons.Default.InsertDriveFile, contentDescription = null, tint = Color.Gray)
-            }
-        },
-        modifier = Modifier.clickable(onClick = onClick)
-    )
-}
+# No FileItem, adicionar subtitle com detalhes
+ListItem(
+    headlineContent = { Text(file.name) },
+    supportingContent = {
+        Text(
+            if (file.isDirectory) "${file.listFiles()?.size ?: 0} itens • ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(file.lastModified()))}"
+            else "${file.length() / 1024} KB • ${SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(file.lastModified()))}"
+        )
+    },
+    ...
+)
