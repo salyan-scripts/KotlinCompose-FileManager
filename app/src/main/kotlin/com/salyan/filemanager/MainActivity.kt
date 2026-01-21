@@ -1,5 +1,6 @@
 package com.salyan.filemanager
 
+import androidx.compose.material.icons.filled.Sort
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -79,8 +80,8 @@ fun FileManagerApp() {
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* Menu futuro */ }) {
-                        Icon(Icons.Default.MoreVert, "Mais")
+                    IconButton(onClick = { /* Ordenar por nome/data/tamanho */ }) {
+                        Icon(Icons.Default.Sort, "Ordenar")
                     }
                 }
             )
