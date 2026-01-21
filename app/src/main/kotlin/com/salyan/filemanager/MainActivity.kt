@@ -110,7 +110,6 @@ fun FileManagerApp() {
                         },
                         modifier = Modifier.clickable {
                             if (file.isDirectory) currentPath = file
-                            // TODO: abrir arquivo
                         }
                     )
                 }
