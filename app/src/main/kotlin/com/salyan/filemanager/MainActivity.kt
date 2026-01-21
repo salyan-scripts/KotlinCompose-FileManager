@@ -38,6 +38,8 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.runtime.Composable
@@ -70,19 +72,21 @@ fun FileManagerApp() {
     var currentPath by remember { mutableStateOf(Environment.getExternalStorageDirectory()) }
     var files by remember { mutableStateOf(listOf<File>()) }
     var permissionGranted by remember { mutableStateOf(false) }
+var showHidden by remember { mutableStateOf(false) }
+var sortBy by remember { mutableStateOf("name") } // "name", "date", "size"
 
     LaunchedEffect(Unit) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             permissionGranted = true
-            files = currentPath.listFiles()?.toList() ?: emptyList()
+updateFiles(currentPath, showHidden, sortBy, { files = it })
         } else {
             ActivityCompat.requestPermissions(context as MainActivity, arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 1)
         }
     }
 
-    LaunchedEffect(currentPath) {
+    LaunchedEffect(currentPath, showHidden, sortBy) {
         if (permissionGranted) {
-            files = currentPath.listFiles()?.toList() ?: emptyList()
+updateFiles(currentPath, showHidden, sortBy, { files = it })
         }
     }
 
@@ -100,6 +104,15 @@ TextField(value = searchText, onValueChange = { searchText = it ; updateFiles(..
                     }
                 },
                 actions = {
+var showMenu by remember { mutableStateOf(false) }
+IconButton(onClick = { showMenu = true }) { Icon(Icons.Default.MoreVert, "Menu") }
+DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+DropdownMenuItem(text = { Text("Nova pasta") }, onClick = { File(currentPath, "NovaPasta").mkdir(); updateFiles(currentPath, showHidden, sortBy, { files = it }) })
+DropdownMenuItem(text = { Text("Ordenar por nome") }, onClick = { sortBy = "name"; showMenu = false })
+DropdownMenuItem(text = { Text("Ordenar por data") }, onClick = { sortBy = "date"; showMenu = false })
+DropdownMenuItem(text = { Text("Ordenar por tamanho") }, onClick = { sortBy = "size"; showMenu = false })
+DropdownMenuItem(text = { Text(if (showHidden) "Ocultar ocultos" else "Exibir ocultos") }, onClick = { showHidden = !showHidden; showMenu = false })
+}
 IconButton(onClick = { /* Lista volumes */ getStorageVolumes(context) }) { Icon(Icons.Default.SdCard, "Armazenamentos") }
                     IconButton(onClick = { /* Menu: ordenar, nova pasta */ }) {
                         Icon(Icons.Default.MoreVert, contentDescription = "Mais")
@@ -225,4 +238,14 @@ suspend fun zipFile(file: File) {
 fun getStorageVolumes(context: Context): List<File> {
     val storageManager = context.getSystemService(Context.STORAGE_SERVICE) as StorageManager
     return storageManager.storageVolumes.mapNotNull { it.getPathFile() }
+}
+fun updateFiles(path: File, showHidden: Boolean, sortBy: String, setFiles: (List<File>) -> Unit) {
+    val list = path.listFiles()?.toList() ?: emptyList()
+    val filtered = if (showHidden) list else list.filter { !it.name.startsWith(".") }
+    val sorted = when (sortBy) {
+        "date" -> filtered.sortedByDescending { it.lastModified() }
+        "size" -> filtered.sortedByDescending { it.length() }
+        else -> filtered.sortedBy { it.name.lowercase() }
+    }
+    setFiles(sorted)
 }
